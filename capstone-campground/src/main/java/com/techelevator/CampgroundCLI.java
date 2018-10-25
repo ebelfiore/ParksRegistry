@@ -1,6 +1,9 @@
 package com.techelevator;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
+import java.util.Scanner;
 
 import javax.sql.DataSource;
 
@@ -29,6 +32,11 @@ public class CampgroundCLI {
 	Site s = new Site ();
 	Reservation r = new Reservation();
 	Menu menu = new Menu(System.in, System.out); 
+	Scanner userInput = new Scanner(System.in);
+	private CampgroundDAO campgroundDAO;
+	private ReservationDAO reservationDAO;
+	private SiteDAO siteDAO;
+	private ParkDAO parkDAO;
 	
 	private static final String   VIEW_PARKS_OPTION_1    = "Acadia";
 	private static final String   VIEW_PARKS_OPTION_2    = "Arches";
@@ -60,10 +68,10 @@ public class CampgroundCLI {
 
 	public CampgroundCLI(BasicDataSource datasource) {
 		this.jdbcTemplate = new JdbcTemplate(datasource);
-		CampgroundDAO campgroundDAO = new JDBCCampgroundDAO(datasource);
-		ReservationDAO reservationDAO = new JDBCReservationDAO(datasource);
-		SiteDAO siteDAO = new JDBCSiteDAO(datasource);
-		ParkDAO parkDAO = new JDBCParkDAO(datasource);
+		campgroundDAO = new JDBCCampgroundDAO(datasource);
+		reservationDAO = new JDBCReservationDAO(datasource);
+		siteDAO = new JDBCSiteDAO(datasource);
+		parkDAO = new JDBCParkDAO(datasource);
 	}
 	
 	public void run() {
@@ -94,9 +102,6 @@ public class CampgroundCLI {
 	
 	public void campgroundMenu(String park) {
 		
-		System.out.println("PARK CAMPGROUNDS"
-				+ "\n" + park + " National Park Campgrounds");
-		
 		boolean shouldLoop = true;
 
 		while(shouldLoop) {
@@ -104,8 +109,12 @@ public class CampgroundCLI {
 			String choice = (String)menu.getChoiceFromOptions(CAMPGROUND_OPTIONS);
 
 			if(choice.equals(CAMPGROUND_OPTION_1)) {
+				displayCampgroundInformation(park);
+				reservationMenu(park);
+				
 				
 			} else if(choice.equals(CAMPGROUND_OPTION_2)) {
+				
 				
 			} else if(choice.equals(VIEW_PARKS_OPTION_EXIT)) {
 				
@@ -114,7 +123,7 @@ public class CampgroundCLI {
 		}
 	}
 	
-	public void reservationMenu(String campground) {
+	public void reservationMenu(String park) {
 		boolean shouldLoop = true;
 
 		while(shouldLoop) {
@@ -122,10 +131,20 @@ public class CampgroundCLI {
 			String choice = (String)menu.getChoiceFromOptions(RESERVATION_OPTIONS);
 
 			if(choice.equals(RESERVATION_OPTION_1)) {
-				// process for option 1 choice - good place for a method call
+				System.out.println("Which campground would you like?");
+				String campInput = userInput.nextLine();
+				System.out.println("When will you be arriving?");
+				String dateArrival = userInput.nextLine();
+				System.out.println("When will you be leaving?");
+				String dateDepart = userInput.nextLine();
+				
+				reservationDAO.makeReservation(campInput, dateArrival, dateDepart);
+				
 			} else if(choice.equals(RESERVATION_OPTION_EXIT)) {
 			       shouldLoop = false;	  
 			}
+			
+			
 		}
 	}
 	
@@ -153,8 +172,28 @@ public class CampgroundCLI {
 	}
 	
 	public void displayCampgroundInformation(String park) {
-		System.out.print("");
+		System.out.println("PARK CAMPGROUNDS"
+				+ "\n" + park + " National Park Campgrounds \n");
+		List<String> str = new ArrayList<String>();
 		
+		String campQuery = "SELECT * FROM campground JOIN park ON park.park_id = campground.park_id WHERE park.name = ?";
+		SqlRowSet campChoice = jdbcTemplate.queryForRowSet(campQuery, park);
+		
+		String choice = "";
+		while (campChoice.next()) {
+			str.add(campChoice.getString("name") + "\t" + campChoice.getString("open_from_mm") + "\t" + 
+			campChoice.getString("open_to_mm") + "\t" + campChoice.getBigDecimal("daily_fee"));
+		}
+		
+		String[] campInfo = new String[str.size()];
+		
+		for (int i = 0; i < str.size(); i++) {
+			campInfo[i] = str.get(i);
+		}
+		
+		choice = (String)menu.getChoiceFromOptions(campInfo);
+		
+			
 		
 	}
 	
