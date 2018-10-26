@@ -189,11 +189,13 @@ public class CampgroundCLI {
 		SqlRowSet campChoice = jdbcTemplate.queryForRowSet(campQuery, park);
 		
 		BigDecimal campCost = new BigDecimal("0");
+		String campMenu = String.format("%-15.15s%-15.15s%-15.15s%-15.15s", "CAMP NAME", "OPEN FROM", "OPEN TO", "COST PER DAY");
+		System.out.println(campMenu);
 		
 		while (campChoice.next()) {
-			str.add(campChoice.getString("name") + "\t" + campChoice.getString("open_from_mm") + "\t" + 
-			campChoice.getString("open_to_mm") + "\t" + campChoice.getBigDecimal("daily_fee"));
-			//campChoice.next();
+			String toArray = String.format("%-15.15s%-15.15s%-15.15s%-15.15s\n", campChoice.getString("name"), 
+					campChoice.getString("open_from_mm"), campChoice.getString("open_to_mm"), campChoice.getBigDecimal("daily_fee"));
+			str.add(toArray);
 			campCost = campChoice.getBigDecimal("daily_fee");
 		}
 		

@@ -50,11 +50,15 @@ public class JDBCReservationDAO implements ReservationDAO{
 
 		parkChoice = jdbcTemplate.queryForRowSet(makingReservation, arriveDate, arriveDate, departDate, departDate, arriveDate, departDate);		
 		
-		System.out.printf("%15s", "Site No.", "Max Occup.", "Accesible?", "Max RV Length", "Utility", "Cost");
-				
+		String columns = String.format("%-15.15s%-15.15s%-15.15s%-15.15s%-15.15s%-15.15s", 
+				"Site No.", "Max Occup.", "Accesible?", "Max RV Length", "Utility", "Cost");
+		System.out.println(columns);
+
+		
 		while (parkChoice.next()) {
-			System.out.printf("%15s", parkChoice.getInt("site_id"), parkChoice.getInt("max_occupancy"), parkChoice.getBoolean("accessible"), 
-			parkChoice.getInt("max_rv_length"), parkChoice.getBoolean("utilities"), (price.multiply(tripDays)), "\n");
+			String sites = String.format("%-15.15s%-15.15s%-15.15s%-15.15s%-15.15s%-15.15s\n", parkChoice.getInt("site_id"), parkChoice.getInt("max_occupancy"), parkChoice.getBoolean("accessible"), 
+					parkChoice.getInt("max_rv_length"), parkChoice.getBoolean("utilities"), (price.multiply(tripDays)));
+			System.out.println(sites);
 		}
 		} catch (ParseException e) {
 			e.printStackTrace();
