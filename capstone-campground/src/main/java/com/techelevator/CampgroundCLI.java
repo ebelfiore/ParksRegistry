@@ -1,5 +1,6 @@
 package com.techelevator;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -85,6 +86,8 @@ public class CampgroundCLI {
 			
 			String choice = (String)menu.getChoiceFromOptions(VIEW_PARKS_OPTIONS);
 
+			BigDecimal hold = new BigDecimal("0");
+			
 			if(choice.equals(VIEW_PARKS_OPTION_1)) {		
 				displayParkInformation("Acadia");
 				campgroundMenu("Acadia");
@@ -92,8 +95,8 @@ public class CampgroundCLI {
 				displayParkInformation("Arches");
 				campgroundMenu("Arches");
 			} else if(choice.equals(VIEW_PARKS_OPTION_3)) {
-				displayParkInformation("Cuyahoga National Valley");
-				campgroundMenu("Cuyahoga National Valley");
+				displayParkInformation("Cuyahoga Valley");
+				campgroundMenu("Cuyahoga Valley");
 			} else if(choice.equals(VIEW_PARKS_OPTION_EXIT)) {
 			       shouldLoop = false;	  
 			}
@@ -103,14 +106,15 @@ public class CampgroundCLI {
 	public void campgroundMenu(String park) {
 		
 		boolean shouldLoop = true;
+		BigDecimal campCost = new BigDecimal("0");
 
 		while(shouldLoop) {
 			
 			String choice = (String)menu.getChoiceFromOptions(CAMPGROUND_OPTIONS);
 
 			if(choice.equals(CAMPGROUND_OPTION_1)) {
-				displayCampgroundInformation(park);
-				reservationMenu(park);
+				campCost = displayCampgroundInformation(park);
+				reservationMenu(park, campCost);
 				
 				
 			} else if(choice.equals(CAMPGROUND_OPTION_2)) {
@@ -123,7 +127,7 @@ public class CampgroundCLI {
 		}
 	}
 	
-	public void reservationMenu(String park) {
+	public void reservationMenu(String park, BigDecimal cost) {
 		boolean shouldLoop = true;
 
 		while(shouldLoop) {
@@ -138,7 +142,7 @@ public class CampgroundCLI {
 				System.out.println("When will you be leaving?");
 				String dateDepart = userInput.nextLine();
 				
-				reservationDAO.makeReservation(campInput, dateArrival, dateDepart);
+				reservationDAO.searchReservation(campInput, dateArrival, dateDepart, cost);
 				
 			} else if(choice.equals(RESERVATION_OPTION_EXIT)) {
 			       shouldLoop = false;	  
@@ -171,7 +175,7 @@ public class CampgroundCLI {
 				+ description);
 	}
 	
-	public void displayCampgroundInformation(String park) {
+	public BigDecimal displayCampgroundInformation(String park) {
 		System.out.println("PARK CAMPGROUNDS"
 				+ "\n" + park + " National Park Campgrounds \n");
 		List<String> str = new ArrayList<String>();
@@ -179,21 +183,22 @@ public class CampgroundCLI {
 		String campQuery = "SELECT * FROM campground JOIN park ON park.park_id = campground.park_id WHERE park.name = ?";
 		SqlRowSet campChoice = jdbcTemplate.queryForRowSet(campQuery, park);
 		
-		String choice = "";
+		
 		while (campChoice.next()) {
 			str.add(campChoice.getString("name") + "\t" + campChoice.getString("open_from_mm") + "\t" + 
 			campChoice.getString("open_to_mm") + "\t" + campChoice.getBigDecimal("daily_fee"));
 		}
 		
+		BigDecimal campCost = campChoice.getBigDecimal("daily_fee");
 		String[] campInfo = new String[str.size()];
 		
 		for (int i = 0; i < str.size(); i++) {
 			campInfo[i] = str.get(i);
 		}
 		
-		choice = (String)menu.getChoiceFromOptions(campInfo);
+		String choice = (String)menu.getChoiceFromOptions(campInfo);
 		
-			
+		return campCost;
 		
 	}
 	
