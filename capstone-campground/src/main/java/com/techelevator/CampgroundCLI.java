@@ -25,6 +25,10 @@ import com.techelevator.model.jdbc.JDBCParkDAO;
 import com.techelevator.model.jdbc.JDBCReservationDAO;
 import com.techelevator.model.jdbc.JDBCSiteDAO;
 
+
+
+
+
 public class CampgroundCLI {
 	
 	private JdbcTemplate jdbcTemplate;
@@ -118,7 +122,8 @@ public class CampgroundCLI {
 				
 				
 			} else if(choice.equals(CAMPGROUND_OPTION_2)) {
-				
+				campCost = displayCampgroundInformation(park);
+				reservationMenu(park, campCost);
 				
 			} else if(choice.equals(VIEW_PARKS_OPTION_EXIT)) {
 				
@@ -183,13 +188,16 @@ public class CampgroundCLI {
 		String campQuery = "SELECT * FROM campground JOIN park ON park.park_id = campground.park_id WHERE park.name = ?";
 		SqlRowSet campChoice = jdbcTemplate.queryForRowSet(campQuery, park);
 		
+		BigDecimal campCost = new BigDecimal("0");
 		
 		while (campChoice.next()) {
 			str.add(campChoice.getString("name") + "\t" + campChoice.getString("open_from_mm") + "\t" + 
 			campChoice.getString("open_to_mm") + "\t" + campChoice.getBigDecimal("daily_fee"));
+			//campChoice.next();
+			campCost = campChoice.getBigDecimal("daily_fee");
 		}
 		
-		BigDecimal campCost = campChoice.getBigDecimal("daily_fee");
+		
 		String[] campInfo = new String[str.size()];
 		
 		for (int i = 0; i < str.size(); i++) {

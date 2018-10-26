@@ -7,6 +7,7 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.time.Period;
 import java.util.Date;
+import java.util.Scanner;
 
 import org.apache.commons.dbcp2.BasicDataSource;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -18,6 +19,7 @@ public class JDBCReservationDAO implements ReservationDAO{
 
 	
 	private JdbcTemplate jdbcTemplate;
+	Scanner userInput = new Scanner(System.in);
 	
 	public JDBCReservationDAO(BasicDataSource dataSource) {
 		this.jdbcTemplate = new JdbcTemplate(dataSource);
@@ -28,6 +30,10 @@ public class JDBCReservationDAO implements ReservationDAO{
 		Date arriveDate = new Date();
 		Date departDate = new Date();
 		BigDecimal tripDays;
+		int id =0;
+		SqlRowSet parkChoice;
+		
+		
 		
 		try {
 		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
@@ -42,19 +48,45 @@ public class JDBCReservationDAO implements ReservationDAO{
 				+ "JOIN reservation on site.site_id = reservation.site_id WHERE (((? >= from_date) AND (? <= to_date)) "
 				+ "OR ((? >= from_date) AND (? <= to_date)) OR ((? <= from_date) AND (? >= to_date)))) LIMIT 5";
 
-		SqlRowSet parkChoice = jdbcTemplate.queryForRowSet(makingReservation, arriveDate, arriveDate, departDate, departDate, arriveDate, departDate);		
+		parkChoice = jdbcTemplate.queryForRowSet(makingReservation, arriveDate, arriveDate, departDate, departDate, arriveDate, departDate);		
 		
-		System.out.println("Site No. \t Max Occup. \t Accesible? \t Max RV Length \t Utility \t Cost");
-		
+		System.out.printf("%15s", "Site No.", "Max Occup.", "Accesible?", "Max RV Length", "Utility", "Cost");
+				
 		while (parkChoice.next()) {
-			System.out.println(parkChoice.getInt("site_id") + "\t" + parkChoice.getInt("max_occupancy") + "\t" + parkChoice.getBoolean("accessible") 
-			+ "\t" + parkChoice.getInt("max_rv_length") + "\t" + parkChoice.getBoolean("utilities") + "\t" + (price.multiply(tripDays)));
+			System.out.printf("%15s", parkChoice.getInt("site_id"), parkChoice.getInt("max_occupancy"), parkChoice.getBoolean("accessible"), 
+			parkChoice.getInt("max_rv_length"), parkChoice.getBoolean("utilities"), (price.multiply(tripDays)), "\n");
 		}
 		} catch (ParseException e) {
 			e.printStackTrace();
 		}
 		
-		return 2;
+		System.out.println("Which site would you like to reserve?");
+		String siteReservation = userInput.nextLine();
+		System.out.println("What name should the reservation be under?");
+		String nameReservation = userInput.nextLine();
+		id = Integer.parseInt(siteReservation);
+		int x = makeRes (id, nameReservation, arriveDate, departDate);
+		
+		System.out.println("Your confirmation id is: " + x);
+		
+		return x;
+		
+		
+	}
+	
+	public int makeRes(int siteId, String name, Date startDate, Date endDate) {
+		
+		
+		
+		String createRes = "INSERT INTO reservation (site_id, name, from_date, to_date, create_date) "
+				+ "VALUES (?, ?, ?, ?, now())"; 
+		jdbcTemplate.update(createRes, siteId, name, startDate, endDate);
+		String resId = "SELECT reservation_id FROM reservation WHERE (name = ? AND from_date = ? AND to_date = ?)";
+		SqlRowSet makinRes = jdbcTemplate.queryForRowSet(resId, name, startDate, endDate);
+		makinRes.next();
+		int confirmId = makinRes.getInt("reservation_id");
+		
+		return confirmId;
 	}
 	
 	
