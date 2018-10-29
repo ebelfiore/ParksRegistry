@@ -49,15 +49,16 @@ public class JDBCReservationDAO implements ReservationDAO {
 			siteChoice = jdbcTemplate.queryForRowSet(makingReservation, arriveDate, arriveDate, departDate, departDate,
 					arriveDate, departDate);
 			
-			//siteChoice.next();
-			//String q = "SELECT daily_fee FROM campground JOIN site "
-			//		+ "ON site.campground_id = campground.campground_id WHERE site.site_id = ?";
-			//campFeeResult = jdbcTemplate.queryForRowSet(q, siteChoice.getInt("site_id"));
+			siteChoice.next();
+			String q = "SELECT daily_fee FROM campground JOIN site "
+					+ "ON site.campground_id = campground.campground_id WHERE site.site_id = ?";
+			campFeeResult = jdbcTemplate.queryForRowSet(q, siteChoice.getInt("site_id"));
 			
-			// fee = campFeeResult.getBigDecimal("daily_fee");
-			//siteChoice.previous();
+			campFeeResult.next();
+			fee = campFeeResult.getBigDecimal("daily_fee");
+			siteChoice.previous();
 			
-			// BigDecimal totalFee = fee.multiply(tripDays);
+			BigDecimal totalFee = fee.multiply(tripDays);
 
 			String columns = String.format("%-15.15s%-15.15s%-15.15s%-15.15s%-15.15s%-15.15s", "Site No.", "Max Occup.",
 					"Accesible?", "Max RV Length", "Utility", "Cost");
@@ -67,7 +68,7 @@ public class JDBCReservationDAO implements ReservationDAO {
 				String sites = String.format("%-15.15s%-15.15s%-15.15s%-15.15s%-15.15s%-15.15s\n",
 						siteChoice.getInt("site_id"), siteChoice.getInt("max_occupancy"),
 						siteChoice.getBoolean("accessible"), siteChoice.getInt("max_rv_length"),
-						siteChoice.getBoolean("utilities")/*, totalFee.toString()*/);
+						siteChoice.getBoolean("utilities"), totalFee.toString());
 				System.out.println(sites);
 			}
 		} catch (ParseException e) {
