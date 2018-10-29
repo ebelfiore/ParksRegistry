@@ -84,7 +84,7 @@ public class CampgroundCLI {
 		while (shouldLoop) {
 
 			String choice = (String) menu.getChoiceFromOptions(VIEW_PARKS_OPTIONS);
-			BigDecimal hold = new BigDecimal("0");
+			
 
 			if (choice.equals(VIEW_PARKS_OPTION_1)) {
 				displayParkInformation("Acadia");
@@ -115,32 +115,8 @@ public class CampgroundCLI {
 
 			} else if (choice.equals(CAMPGROUND_OPTION_2)) {
 				displayCampgroundInformation(park);
-				reservationMenu(park);
 
 			} else if (choice.equals(CAMPGROUND_OPTION_EXIT)) {
-				shouldLoop = false;
-			}
-		}
-	}
-
-	public void reservationMenu(String park) {
-		boolean shouldLoop = true;
-
-		while (shouldLoop) {
-
-			String choice = (String) menu.getChoiceFromOptions(RESERVATION_OPTIONS);
-
-			if (choice.equals(RESERVATION_OPTION_1)) {
-				System.out.println("Which campground would you like?");
-				String campInput = userInput.nextLine();
-				System.out.println("When will you be arriving (YYYY-MM-DD)?");
-				String dateArrival = userInput.nextLine();
-				System.out.println("When will you be leaving (YYYY-MM-DD)?");
-				String dateDepart = userInput.nextLine();
-
-				reservationDAO.searchReservation(dateArrival, dateDepart);
-
-			} else if (choice.equals(RESERVATION_OPTION_EXIT)) {
 				shouldLoop = false;
 			}
 		}
@@ -192,5 +168,46 @@ public class CampgroundCLI {
 				y++;
 				System.out.println(y + ") " + z);
 		}
+			BigDecimal cost;
+			String camp;
+			boolean shouldLoop = true;
+			campChoice.first();
+			
+			while (shouldLoop) {
+
+				String choice = (String) menu.getChoiceFromOptions(RESERVATION_OPTIONS);
+
+				if (choice.equals(RESERVATION_OPTION_1)) {
+					System.out.println("Which campground would you like?");
+					String campInput = userInput.nextLine();
+					int x = Integer.parseInt(campInput);
+					
+					if (x == 1) {
+						cost = campChoice.getBigDecimal("daily_fee");
+						camp = campChoice.getString("name");
+					}
+					else if (x == 2) {
+						campChoice.next();
+						cost = campChoice.getBigDecimal("daily_fee");
+						camp = campChoice.getString("name");
+					}
+					else {
+						campChoice.next();
+						campChoice.next();
+						cost = campChoice.getBigDecimal("daily_fee");
+						camp = campChoice.getString("name");
+					}
+					
+					System.out.println("When will you be arriving (YYYY-MM-DD)?");
+					String dateArrival = userInput.nextLine();
+					System.out.println("When will you be leaving (YYYY-MM-DD)?");
+					String dateDepart = userInput.nextLine();
+
+					reservationDAO.searchReservation(dateArrival, dateDepart, cost, camp);
+
+				} else if (choice.equals(RESERVATION_OPTION_EXIT)) {
+					shouldLoop = false;
+				}
+			}
 	}
 }

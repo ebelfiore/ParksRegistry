@@ -24,12 +24,12 @@ public class JDBCReservationDAO implements ReservationDAO {
 		this.jdbcTemplate = new JdbcTemplate(dataSource);
 	}
 
-	public int searchReservation(String arrive, String depart) {
+	public int searchReservation(String arrive, String depart, BigDecimal cost, String camp) {
 
 		Date arriveDate = new Date();
 		Date departDate = new Date();
 		BigDecimal tripDays;
-		BigDecimal fee;
+		BigDecimal fee = cost;
 		int id = 0;
 		SqlRowSet siteChoice;
 		SqlRowSet campFeeResult;
@@ -42,21 +42,13 @@ public class JDBCReservationDAO implements ReservationDAO {
 			long difference = (departDate.getTime() - arriveDate.getTime()) / 86400000;
 			tripDays = new BigDecimal(difference);
 
-			String makingReservation = "SELECT * FROM site WHERE site.site_id not in ("
+			String makingReservation = "SELECT * FROM site JOIN campground ON site.campground_id = campground.campground_id "
+					+ "WHERE (campground.name = ? AND site.site_id not in ("
 					+ "SELECT site.site_id FROM site "
 					+ "JOIN reservation on site.site_id = reservation.site_id WHERE (((? >= from_date) AND (? <= to_date)) "
-					+ "OR ((? >= from_date) AND (? <= to_date)) OR ((? <= from_date) AND (? >= to_date)))) LIMIT 5";
-			siteChoice = jdbcTemplate.queryForRowSet(makingReservation, arriveDate, arriveDate, departDate, departDate,
+					+ "OR ((? >= from_date) AND (? <= to_date)) OR ((? <= from_date) AND (? >= to_date))))) LIMIT 5";
+			siteChoice = jdbcTemplate.queryForRowSet(makingReservation, camp, arriveDate, arriveDate, departDate, departDate,
 					arriveDate, departDate);
-			
-			siteChoice.next();
-			String q = "SELECT daily_fee FROM campground JOIN site "
-					+ "ON site.campground_id = campground.campground_id WHERE site.site_id = ?";
-			campFeeResult = jdbcTemplate.queryForRowSet(q, siteChoice.getInt("site_id"));
-			
-			campFeeResult.next();
-			fee = campFeeResult.getBigDecimal("daily_fee");
-			siteChoice.previous();
 			
 			BigDecimal totalFee = fee.multiply(tripDays);
 
